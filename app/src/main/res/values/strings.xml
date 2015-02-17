@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">WhatsApp Transmitter</string>
+    <string name="hello_world">test</string>
+    <string name="action_settings">Settings</string>
+    <string name="btnText">Upload</string>
+    <string name="chsTxt">File chooser</string>
+
+</resources>
