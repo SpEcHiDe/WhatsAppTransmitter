@@ -23,12 +23,11 @@ public class MainActivity extends ActionBarActivity {
     ProgressDialog dialog = null;
     String upLoadServerUri = null ;
     private static final int READ_REQUEST_CODE = 42;
-    private static final String TAG="qwerty";
+    private static final String TAG="spechide";
 
     /**********  File Path *************/
     String uploadFilePath = "";
     String uploadFileName = "";
-    // final String uploadFileName = "q.jpg";
     /**********  File Path *************/
 
 
@@ -48,7 +47,7 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public void onClick(View v) {
 
-                dialog = ProgressDialog.show(MainActivity. this , "", "Uploading file...", true );
+                dialog = ProgressDialog.show(MainActivity. this , "", "Uploading file... \n . . . Please wait", true );
 
                 new Thread( new Runnable() {
                     public void run() {
@@ -58,7 +57,7 @@ public class MainActivity extends ActionBarActivity {
                             }
                         });
 
-                        uploadFile(uploadFilePath + "" + uploadFileName);
+                        uploadFile(uploadFilePath);
 
                     }
                 }).start();
@@ -159,9 +158,11 @@ public class MainActivity extends ActionBarActivity {
                     runOnUiThread( new Runnable() {
                         public void run() {
 
-                            String msg = "File Upload Completed.\n\n See uploaded file here : \n\n"
+                            String msg = "Share URI here : \n\n"
                                     +" http://btappnder.freeiz.com/uploads/"
-                                    +uploadFileName;
+                                    +uploadFileName
+                                    +"\n\n==========================\n\n" +
+                                    "To send any type of file over WhatsApp : http://btappnder.freeiz.com/uploads/send.apk";
 
                             messageText.setText(msg);
                             Toast.makeText(MainActivity. this , "File Upload Complete.",
@@ -238,7 +239,10 @@ public class MainActivity extends ActionBarActivity {
             if (resultData != null) {
                 uri = resultData.getData();
                 Log.i(TAG, "Uri: " + uri.toString());
+                Log.i(TAG, "name : "+uri.getLastPathSegment());
                 uploadFilePath = getRealPathFromURI(MainActivity.this, uri);
+                uploadFileName = uri.getLastPathSegment();
+                messageText.setText("Uploading file path :- "+uploadFilePath+"");
             }
         }
     }
@@ -274,6 +278,7 @@ public class MainActivity extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Toast.makeText(MainActivity.this,"SpEcHiDe",Toast.LENGTH_LONG).show();
             return true;
         }
 
