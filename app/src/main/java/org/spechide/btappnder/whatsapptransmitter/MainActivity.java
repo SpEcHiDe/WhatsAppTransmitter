@@ -86,12 +86,12 @@ public class MainActivity extends ActionBarActivity {
             dialog.dismiss();
 
             Log.e("uploadFile", "Source File not exist :"
-                    +uploadFilePath + "" + uploadFileName);
+                    +uploadFilePath);
 
             runOnUiThread( new Runnable() {
                 public void run() {
                     messageText.setText("Source File not exist :"
-                            +uploadFilePath + "" + uploadFileName);
+                            +uploadFilePath );
                 }
             });
 
