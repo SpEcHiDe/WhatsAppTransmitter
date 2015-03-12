@@ -15,7 +15,7 @@ An app to send any type of file via whatsapp.
 
 ### Installation instructions
 
-Download the apk from http://btappnder.freeiz.com/uploads/send.apk
+Download the apk from http://btappnder.freeiz.com/uploads/application.apk
 
 
 
