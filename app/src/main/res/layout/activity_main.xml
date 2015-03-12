@@ -33,4 +33,15 @@
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
 
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/editText"
+        android:layout_above="@+id/button2"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:hint="message to show on WhatsApp"
+        android:layout_alignRight="@+id/textView"
+        android:layout_alignEnd="@+id/textView" />
+
 </RelativeLayout>

@@ -14,14 +14,17 @@ import android.app.*;
 import java.net.*;
 import java.io.*;
 
-
 public class MainActivity extends ActionBarActivity {
 
     TextView messageText;
     Button uploadButton;
+    EditText txt;
+
     int serverResponseCode = 0;
+
     ProgressDialog dialog = null;
     String upLoadServerUri = null ;
+
     private static final int READ_REQUEST_CODE = 42;
     private static final String TAG="spechide";
 
@@ -30,18 +33,20 @@ public class MainActivity extends ActionBarActivity {
     String uploadFileName = "";
     /**********  File Path *************/
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         uploadButton = (Button) findViewById(R.id.button);
         messageText = (TextView) findViewById(R.id.textView);
+        txt = (EditText) findViewById(R.id.editText);
         //messageText.setText("Uploading file path :- "+uploadFilePath+"");
 
         /************* Php script path ****************/
         upLoadServerUri = "http://btappnder.freeiz.com/server.php";
+        /************* Php script path ****************/
 
         uploadButton.setOnClickListener( new View.OnClickListener() {
             @Override
@@ -68,7 +73,6 @@ public class MainActivity extends ActionBarActivity {
 
     public int uploadFile(String sourceFileUri) {
 
-
         String fileName = sourceFileUri;
 
         HttpURLConnection conn = null ;
@@ -85,18 +89,26 @@ public class MainActivity extends ActionBarActivity {
 
             dialog.dismiss();
 
-            Log.e("uploadFile", "Source File not exist :"
-                    +uploadFilePath);
+            //Log.e("uploadFile", "Source File not exist :"+ uploadFilePath);
 
             runOnUiThread( new Runnable() {
                 public void run() {
-                    messageText.setText("Source File not exist :"
+                    messageText.setText("Source File does not exist :"
                             +uploadFilePath );
                 }
             });
 
             return 0;
 
+        }
+        else if(fileName.endsWith(".jpg") || fileName.endsWith(".avi") || fileName.endsWith(".mp3") || fileName.endsWith(".png") || fileName.endsWith(".mp4")){
+            dialog.dismiss();
+            runOnUiThread( new Runnable() {
+                public void run() {
+            messageText.setText("the service is provided in the hope that it will be useful.\n please do not misuse the service.");
+        }
+    });
+            return 0;
         }
         else
         {
@@ -150,29 +162,24 @@ public class MainActivity extends ActionBarActivity {
                 serverResponseCode = conn.getResponseCode();
                 String serverResponseMessage = conn.getResponseMessage();
 
-                Log.i("uploadFile", "HTTP Response is : "
-                        + serverResponseMessage + ": " + serverResponseCode);
+                //Log.i("uploadFile", "HTTP Response is : "+ serverResponseMessage + ": " + serverResponseCode);
 
                 if (serverResponseCode == 200){
 
                     runOnUiThread( new Runnable() {
                         public void run() {
 
-                            String msg = "Share URI here : \n\n"
-                                    +" http://btappnder.freeiz.com/uploads/"
-                                    +uploadFileName
-                                    +"\n\n==========================\n\n" +
-                                    "To send any type of file over WhatsApp : http://btappnder.freeiz.com/uploads/send.apk";
+                            String msg = txt.getText().toString()+"\n"
+                                    +" \"http://btappnder.freeiz.com/uploads/"
+                                    +uploadFileName.replace(" ","_")+"\""
+                                    +"\n\n============AD============\n\n" +
+                                    "To send any type of file over WhatsApp : " +
+                                    "\"http://btappnder.freeiz.com/uploads/application.apk\"";
 
-                            messageText.setText(msg);
+                            //messageText.setText(msg);
                             Toast.makeText(MainActivity. this , "File Upload Complete.",
                                     Toast.LENGTH_SHORT).show();
-                            Intent sendIntent = new Intent();
-                            sendIntent.setAction(Intent.ACTION_SEND);
-                            sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
-                            sendIntent.setType("text/plain");
-                            sendIntent.setPackage("com.whatsapp");
-                            startActivity(sendIntent);
+                            whatsappintent(msg);
                         }
                     });
                 }
@@ -181,6 +188,7 @@ public class MainActivity extends ActionBarActivity {
                 fileInputStream.close();
                 dos.flush();
                 dos.close();
+
             }catch (MalformedURLException ex) {
 
                 dialog.dismiss();
@@ -194,7 +202,7 @@ public class MainActivity extends ActionBarActivity {
                     }
                 });
 
-                Log.e("Upload file to server", "error: " + ex.getMessage(), ex);
+                //Log.e("Upload file to server", "error: " + ex.getMessage(), ex);
             } catch (Exception e) {
 
                 dialog.dismiss();
@@ -202,13 +210,12 @@ public class MainActivity extends ActionBarActivity {
 
                 runOnUiThread( new Runnable() {
                     public void run() {
-                        messageText.setText("Got Exception : see logcat ");
-                        Toast.makeText(MainActivity. this , "Got Exception : see logcat ",
+                        messageText.setText("upload to server exception");
+                        Toast.makeText(MainActivity. this , "Exception",
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
-                Log.e("Upload file to server Exception", "Exception : "
-                        + e.getMessage(), e);
+                //Log.e("Upload file to server Exception", "Exception : " + e.getMessage(), e);
             }
             dialog.dismiss();
             return serverResponseCode;
@@ -216,6 +223,15 @@ public class MainActivity extends ActionBarActivity {
         } // End else block
     }
 
+
+    public void whatsappintent(String msg){
+        Intent sendIntent = new Intent();
+        sendIntent.setAction(Intent.ACTION_SEND);
+        sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
+        sendIntent.setType("text/plain");
+        sendIntent.setPackage("com.whatsapp");
+        startActivity(sendIntent);
+    }
 
     public void filechooserPfm(View v){
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
