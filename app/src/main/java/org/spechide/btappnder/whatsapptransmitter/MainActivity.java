@@ -58,7 +58,7 @@ public class MainActivity extends ActionBarActivity {
                     public void run() {
                         runOnUiThread( new Runnable() {
                             public void run() {
-                                messageText.setText("uploading started.....");
+                                messageText.setText("VERBOSE OUTPUT\nuploading started.....");
                             }
                         });
 
@@ -71,17 +71,137 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
+    public int realUploadThing(HttpURLConnection conn,DataOutputStream dos,File sourceFile,String fileName,String lineEnd,String twoHyphens,String boundary,int maxBufferSize){
+
+        int bytesRead, bytesAvailable, bufferSize;
+        byte [] buffer;
+
+        try{
+
+            // open a URL connection to the Servlet
+            FileInputStream fileInputStream = new FileInputStream(sourceFile);
+            URL url = new URL(upLoadServerUri);
+
+            // Open a HTTP  connection to  the URL
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setDoInput( true ); // Allow Inputs
+            conn.setDoOutput( true ); // Allow Outputs
+            conn.setUseCaches( false ); // Don't use a Cached Copy
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Connection", "Keep-Alive");
+            conn.setRequestProperty("ENCTYPE", "multipart/form-data");
+            conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+            // send PHP POST request with the given filename
+            conn.setRequestProperty("uploaded_file", fileName);
+
+            dos = new DataOutputStream(conn.getOutputStream());
+
+            dos.writeBytes(twoHyphens + boundary + lineEnd);
+            dos.writeBytes("Content-Disposition: form-data; name=\"uploaded_file\";filename=\""+ fileName + "\"" + lineEnd);
+
+            dos.writeBytes(lineEnd);
+
+            // create a buffer of  maximum size
+            bytesAvailable = fileInputStream.available();
+
+            bufferSize = Math.min(bytesAvailable, maxBufferSize);
+            buffer = new byte [bufferSize];
+
+            // read file and write it into form...
+            bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+
+            while (bytesRead > 0) {
+
+                dos.write(buffer, 0, bufferSize);
+                bytesAvailable = fileInputStream.available();
+                bufferSize = Math.min(bytesAvailable, maxBufferSize);
+                bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+
+            }
+
+            // send multipart form data necesssary after file data...
+            dos.writeBytes(lineEnd);
+            dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+
+            // Responses from the server (code and message)
+            serverResponseCode = conn.getResponseCode();
+            String serverResponseMessage = conn.getResponseMessage();
+
+            Log.i("uploadFile", "HTTP Response is : "+ serverResponseMessage + ": " + serverResponseCode);
+
+            if (serverResponseCode == 200){
+
+                runOnUiThread( new Runnable() {
+                    public void run() {
+
+                        String msg = txt.getText().toString()+"\n"
+                                +" \"http://btappnder.freeiz.com/uploads/"
+                                +uploadFileName.replace(" ","_")+"\"";
+
+                        //messageText.setText(msg);
+
+                        Toast.makeText(MainActivity. this , "File Upload Complete.",
+                                Toast.LENGTH_SHORT).show();
+
+                        whatsappintent(msg);
+
+                    }
+                });
+            }
+            //close the streams //
+            fileInputStream.close();
+            dos.flush();
+            dos.close();
+            return serverResponseCode;
+        }
+
+        catch (MalformedURLException ex) {
+
+            dialog.dismiss();
+            ex.printStackTrace();
+
+                runOnUiThread( new Runnable() {
+                public void run() {
+                    messageText.setText("VERBOSE OUTPUT\nMalformedURLException Exception : check script url.");
+                    Toast.makeText(MainActivity. this , "MalformedURLException",
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            Log.e("Upload file to server", "error: " + ex.getMessage(), ex);
+
+            return -1;
+        }
+
+        catch (Exception e) {
+
+            dialog.dismiss();
+            e.printStackTrace();
+
+            runOnUiThread( new Runnable() {
+                public void run() {
+                    messageText.setText("VERBOSE OUTPUT\nupload to server exception");
+                    Toast.makeText(MainActivity. this , "Exception",
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            Log.e("Upload Exception", "Exception : " + e.getMessage(), e);
+
+            return -1;
+        }
+
+    }
+
     public int uploadFile(String sourceFileUri) {
 
         String fileName = sourceFileUri;
-
         HttpURLConnection conn = null ;
         DataOutputStream dos = null ;
         String lineEnd = "\r\n";
         String twoHyphens = "--";
         String boundary = "*****";
-        int bytesRead, bytesAvailable, bufferSize;
-        byte [] buffer;
+
         int maxBufferSize = 1 * 1024 * 1024;
         File sourceFile = new File(sourceFileUri);
 
@@ -89,12 +209,11 @@ public class MainActivity extends ActionBarActivity {
 
             dialog.dismiss();
 
-            //Log.e("uploadFile", "Source File not exist :"+ uploadFilePath);
+            Log.e("uploadFile", "Source File not exist :"+ uploadFilePath);
 
             runOnUiThread( new Runnable() {
                 public void run() {
-                    messageText.setText("Source File does not exist :"
-                            +uploadFilePath );
+                    messageText.setText("VERBOSE OUTPUT\nSource File does not exist :"+uploadFilePath );
                 }
             });
 
@@ -103,126 +222,24 @@ public class MainActivity extends ActionBarActivity {
         }
         else if(fileName.endsWith(".jpg") || fileName.endsWith(".avi") || fileName.endsWith(".mp3") || fileName.endsWith(".png") || fileName.endsWith(".mp4")){
             dialog.dismiss();
+
             runOnUiThread( new Runnable() {
                 public void run() {
-            messageText.setText("the service is provided in the hope that it will be useful.\n please do not misuse the service.");
-        }
-    });
+                messageText.setText("VERBOSE OUTPUT\nthe service is provided in the hope that it will be useful.\n please do not misuse the service.");
+                }
+             });
+
             return 0;
         }
         else
         {
-            try {
-
-                // open a URL connection to the Servlet
-                FileInputStream fileInputStream = new FileInputStream(sourceFile);
-                URL url = new URL(upLoadServerUri);
-
-                // Open a HTTP  connection to  the URL
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setDoInput( true ); // Allow Inputs
-                conn.setDoOutput( true ); // Allow Outputs
-                conn.setUseCaches( false ); // Don't use a Cached Copy
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Connection", "Keep-Alive");
-                conn.setRequestProperty("ENCTYPE", "multipart/form-data");
-                conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
-                conn.setRequestProperty("uploaded_file", fileName);
-
-                dos = new DataOutputStream(conn.getOutputStream());
-
-                dos.writeBytes(twoHyphens + boundary + lineEnd);
-                dos.writeBytes("Content-Disposition: form-data; name=\"uploaded_file\";filename=\""+ fileName + "\"" + lineEnd);
-
-                        dos.writeBytes(lineEnd);
-
-                // create a buffer of  maximum size
-                bytesAvailable = fileInputStream.available();
-
-                bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                buffer = new byte [bufferSize];
-
-                // read file and write it into form...
-                bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-
-                while (bytesRead > 0) {
-
-                    dos.write(buffer, 0, bufferSize);
-                    bytesAvailable = fileInputStream.available();
-                    bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                    bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-
-                }
-
-                // send multipart form data necesssary after file data...
-                dos.writeBytes(lineEnd);
-                dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-
-                // Responses from the server (code and message)
-                serverResponseCode = conn.getResponseCode();
-                String serverResponseMessage = conn.getResponseMessage();
-
-                //Log.i("uploadFile", "HTTP Response is : "+ serverResponseMessage + ": " + serverResponseCode);
-
-                if (serverResponseCode == 200){
-
-                    runOnUiThread( new Runnable() {
-                        public void run() {
-
-                            String msg = txt.getText().toString()+"\n"
-                                    +" \"http://btappnder.freeiz.com/uploads/"
-                                    +uploadFileName.replace(" ","_")+"\""
-                                    +"\n\n============AD============\n\n" +
-                                    "To send any type of file over WhatsApp : " +
-                                    "\"http://btappnder.freeiz.com/uploads/application.apk\"";
-
-                            //messageText.setText(msg);
-                            Toast.makeText(MainActivity. this , "File Upload Complete.",
-                                    Toast.LENGTH_SHORT).show();
-                            whatsappintent(msg);
-                        }
-                    });
-                }
-
-                //close the streams //
-                fileInputStream.close();
-                dos.flush();
-                dos.close();
-
-            }catch (MalformedURLException ex) {
-
+            int serverResponseCode = realUploadThing(conn,dos,sourceFile,fileName,lineEnd,twoHyphens,boundary,maxBufferSize);
+            if (serverResponseCode == 200)
                 dialog.dismiss();
-                ex.printStackTrace();
-
-                runOnUiThread( new Runnable() {
-                    public void run() {
-                        messageText.setText("MalformedURLException Exception : check script url.");
-                        Toast.makeText(MainActivity. this , "MalformedURLException",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-                //Log.e("Upload file to server", "error: " + ex.getMessage(), ex);
-            } catch (Exception e) {
-
-                dialog.dismiss();
-                e.printStackTrace();
-
-                runOnUiThread( new Runnable() {
-                    public void run() {
-                        messageText.setText("upload to server exception");
-                        Toast.makeText(MainActivity. this , "Exception",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
-                //Log.e("Upload file to server Exception", "Exception : " + e.getMessage(), e);
-            }
-            dialog.dismiss();
             return serverResponseCode;
 
         } // End else block
     }
-
 
     public void whatsappintent(String msg){
         Intent sendIntent = new Intent();
@@ -258,7 +275,7 @@ public class MainActivity extends ActionBarActivity {
                 Log.i(TAG, "name : "+uri.getLastPathSegment());
                 uploadFilePath = getRealPathFromURI(MainActivity.this, uri);
                 uploadFileName = uri.getLastPathSegment();
-                messageText.setText("Uploading file path :- "+uploadFilePath+"");
+                messageText.setText("VERBOSE OUTPUT\nfile path :- "+uploadFilePath+"");
             }
         }
     }
@@ -295,6 +312,11 @@ public class MainActivity extends ActionBarActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Toast.makeText(MainActivity.this,"SpEcHiDe",Toast.LENGTH_LONG).show();
+            return true;
+        }
+
+        if (id == R.id.auto_update) {
+            Toast.makeText(MainActivity.this,"under development",Toast.LENGTH_LONG).show();
             return true;
         }
 

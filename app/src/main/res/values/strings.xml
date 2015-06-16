@@ -3,8 +3,9 @@
 
     <string name="app_name">WhatsApp Transmitter</string>
     <string name="hello_world">test</string>
-    <string name="action_settings">About Me</string>
-    <string name="btnText">Upload</string>
-    <string name="chsTxt">File chooser</string>
+    <string name="action_settings">about me</string>
+    <string name="btnText">send file</string>
+    <string name="chsTxt">choose a file</string>
+    <string name="auto_update">update me</string>
 
 </resources>
