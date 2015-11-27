@@ -45,7 +45,7 @@ public class MainActivity extends ActionBarActivity {
         //messageText.setText("Uploading file path :- "+uploadFilePath+"");
 
         /************* Php script path ****************/
-        upLoadServerUri = "http://btappnder.freeiz.com/server.php";
+        upLoadServerUri = "http://btappnder.net23.net/server.php";
         /************* Php script path ****************/
 
         uploadButton.setOnClickListener( new View.OnClickListener() {
@@ -135,7 +135,7 @@ public class MainActivity extends ActionBarActivity {
                     public void run() {
 
                         String msg = txt.getText().toString()+"\n"
-                                +" \"http://btappnder.freeiz.com/uploads/"
+                                +" \"http://btappnder.net23.net/uploads/"
                                 +uploadFileName.replace(" ","_")+"\"";
 
                         //messageText.setText(msg);
