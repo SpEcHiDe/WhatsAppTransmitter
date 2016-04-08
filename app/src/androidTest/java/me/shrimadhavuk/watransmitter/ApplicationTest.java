@@ -1,4 +1,4 @@
-package org.spechide.btappnder.whatsapptransmitter;
+package me.shrimadhavuk.watransmitter;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

@@ -1,20 +1,33 @@
-package org.spechide.btappnder.whatsapptransmitter;
+package me.shrimadhavuk.watransmitter;
 
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.*;
-import android.widget.*;
 import android.util.Log;
-import android.app.*;
-import java.net.*;
-import java.io.*;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
-public class MainActivity extends ActionBarActivity {
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
+
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+public class MainActivity extends AppCompatActivity {
 
     TextView messageText;
     Button uploadButton;
@@ -23,21 +36,22 @@ public class MainActivity extends ActionBarActivity {
     int serverResponseCode = 0;
 
     ProgressDialog dialog = null;
-    String upLoadServerUri = null ;
+    String upLoadServerUri = null;
 
     private static final int READ_REQUEST_CODE = 42;
-    private static final String TAG="spechide";
+    private static final String TAG = "spechide";
 
-    /**********  File Path *************/
+    /**********
+     * File Path
+     *************/
     String uploadFilePath = "";
     String uploadFileName = "";
-    /**********  File Path *************/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         uploadButton = (Button) findViewById(R.id.button);
         messageText = (TextView) findViewById(R.id.textView);
@@ -45,18 +59,18 @@ public class MainActivity extends ActionBarActivity {
         //messageText.setText("Uploading file path :- "+uploadFilePath+"");
 
         /************* Php script path ****************/
-        upLoadServerUri = "http://btappnder.net23.net/server.php";
+        upLoadServerUri = "http://spechide.netne.net/server.php";
         /************* Php script path ****************/
 
-        uploadButton.setOnClickListener( new View.OnClickListener() {
+        uploadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                dialog = ProgressDialog.show(MainActivity. this , "", "Uploading file... \n . . . Please wait", true );
+                dialog = ProgressDialog.show(MainActivity.this, "", "Uploading file... \n . . . Please wait", true);
 
-                new Thread( new Runnable() {
+                new Thread(new Runnable() {
                     public void run() {
-                        runOnUiThread( new Runnable() {
+                        runOnUiThread(new Runnable() {
                             public void run() {
                                 messageText.setText("VERBOSE OUTPUT\nuploading started.....");
                             }
@@ -71,12 +85,13 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
-    public int realUploadThing(HttpURLConnection conn,DataOutputStream dos,File sourceFile,String fileName,String lineEnd,String twoHyphens,String boundary,int maxBufferSize){
+
+    public int realUploadThing(HttpURLConnection conn, DataOutputStream dos, File sourceFile, String fileName, String lineEnd, String twoHyphens, String boundary, int maxBufferSize) {
 
         int bytesRead, bytesAvailable, bufferSize;
-        byte [] buffer;
+        byte[] buffer;
 
-        try{
+        try {
 
             // open a URL connection to the Servlet
             FileInputStream fileInputStream = new FileInputStream(sourceFile);
@@ -84,9 +99,9 @@ public class MainActivity extends ActionBarActivity {
 
             // Open a HTTP  connection to  the URL
             conn = (HttpURLConnection) url.openConnection();
-            conn.setDoInput( true ); // Allow Inputs
-            conn.setDoOutput( true ); // Allow Outputs
-            conn.setUseCaches( false ); // Don't use a Cached Copy
+            conn.setDoInput(true); // Allow Inputs
+            conn.setDoOutput(true); // Allow Outputs
+            conn.setUseCaches(false); // Don't use a Cached Copy
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Connection", "Keep-Alive");
             conn.setRequestProperty("ENCTYPE", "multipart/form-data");
@@ -97,7 +112,7 @@ public class MainActivity extends ActionBarActivity {
             dos = new DataOutputStream(conn.getOutputStream());
 
             dos.writeBytes(twoHyphens + boundary + lineEnd);
-            dos.writeBytes("Content-Disposition: form-data; name=\"uploaded_file\";filename=\""+ fileName + "\"" + lineEnd);
+            dos.writeBytes("Content-Disposition: form-data; name=\"uploaded_file\";filename=\"" + fileName + "\"" + lineEnd);
 
             dos.writeBytes(lineEnd);
 
@@ -105,7 +120,7 @@ public class MainActivity extends ActionBarActivity {
             bytesAvailable = fileInputStream.available();
 
             bufferSize = Math.min(bytesAvailable, maxBufferSize);
-            buffer = new byte [bufferSize];
+            buffer = new byte[bufferSize];
 
             // read file and write it into form...
             bytesRead = fileInputStream.read(buffer, 0, bufferSize);
@@ -127,20 +142,20 @@ public class MainActivity extends ActionBarActivity {
             serverResponseCode = conn.getResponseCode();
             String serverResponseMessage = conn.getResponseMessage();
 
-            Log.i("uploadFile", "HTTP Response is : "+ serverResponseMessage + ": " + serverResponseCode);
+            Log.i("uploadFile", "HTTP Response is : " + serverResponseMessage + ": " + serverResponseCode);
 
-            if (serverResponseCode == 200){
+            if (serverResponseCode == 200) {
 
-                runOnUiThread( new Runnable() {
+                runOnUiThread(new Runnable() {
                     public void run() {
 
-                        String msg = txt.getText().toString()+"\n"
-                                +" \"http://btappnder.net23.net/uploads/"
-                                +uploadFileName.replace(" ","_")+"\"";
+                        String msg = txt.getText().toString() + "\n"
+                                + " \"http://spechide.netne.net/uploads/"
+                                + uploadFileName.replace(" ", "_") + "\"";
 
                         //messageText.setText(msg);
 
-                        Toast.makeText(MainActivity. this , "File Upload Complete.",
+                        Toast.makeText(MainActivity.this, "File Upload Complete.",
                                 Toast.LENGTH_SHORT).show();
 
                         whatsappintent(msg);
@@ -153,17 +168,15 @@ public class MainActivity extends ActionBarActivity {
             dos.flush();
             dos.close();
             return serverResponseCode;
-        }
-
-        catch (MalformedURLException ex) {
+        } catch (MalformedURLException ex) {
 
             dialog.dismiss();
             ex.printStackTrace();
 
-                runOnUiThread( new Runnable() {
+            runOnUiThread(new Runnable() {
                 public void run() {
                     messageText.setText("VERBOSE OUTPUT\nMalformedURLException Exception : check script url.");
-                    Toast.makeText(MainActivity. this , "MalformedURLException",
+                    Toast.makeText(MainActivity.this, "MalformedURLException",
                             Toast.LENGTH_SHORT).show();
                 }
             });
@@ -171,17 +184,15 @@ public class MainActivity extends ActionBarActivity {
             Log.e("Upload file to server", "error: " + ex.getMessage(), ex);
 
             return -1;
-        }
-
-        catch (Exception e) {
+        } catch (Exception e) {
 
             dialog.dismiss();
             e.printStackTrace();
 
-            runOnUiThread( new Runnable() {
+            runOnUiThread(new Runnable() {
                 public void run() {
                     messageText.setText("VERBOSE OUTPUT\nupload to server exception");
-                    Toast.makeText(MainActivity. this , "Exception",
+                    Toast.makeText(MainActivity.this, "Exception",
                             Toast.LENGTH_SHORT).show();
                 }
             });
@@ -196,8 +207,8 @@ public class MainActivity extends ActionBarActivity {
     public int uploadFile(String sourceFileUri) {
 
         String fileName = sourceFileUri;
-        HttpURLConnection conn = null ;
-        DataOutputStream dos = null ;
+        HttpURLConnection conn = null;
+        DataOutputStream dos = null;
         String lineEnd = "\r\n";
         String twoHyphens = "--";
         String boundary = "*****";
@@ -209,31 +220,28 @@ public class MainActivity extends ActionBarActivity {
 
             dialog.dismiss();
 
-            Log.e("uploadFile", "Source File not exist :"+ uploadFilePath);
+            Log.e("uploadFile", "Source File not exist :" + uploadFilePath);
 
-            runOnUiThread( new Runnable() {
+            runOnUiThread(new Runnable() {
                 public void run() {
-                    messageText.setText("VERBOSE OUTPUT\nSource File does not exist :"+uploadFilePath );
+                    messageText.setText("VERBOSE OUTPUT\nSource File does not exist :" + uploadFilePath);
                 }
             });
 
             return 0;
 
-        }
-        else if(fileName.endsWith(".jpg") || fileName.endsWith(".avi") || fileName.endsWith(".mp3") || fileName.endsWith(".png") || fileName.endsWith(".mp4")){
+        } else if (fileName.endsWith(".jpg") || fileName.endsWith(".avi") || fileName.endsWith(".mp3") || fileName.endsWith(".png") || fileName.endsWith(".mp4")) {
             dialog.dismiss();
 
-            runOnUiThread( new Runnable() {
+            runOnUiThread(new Runnable() {
                 public void run() {
-                messageText.setText("VERBOSE OUTPUT\nthe service is provided in the hope that it will be useful.\n please do not misuse the service.");
+                    messageText.setText("VERBOSE OUTPUT\nthe service is provided in the hope that it will be useful.\n please do not misuse the service.");
                 }
-             });
+            });
 
             return 0;
-        }
-        else
-        {
-            int serverResponseCode = realUploadThing(conn,dos,sourceFile,fileName,lineEnd,twoHyphens,boundary,maxBufferSize);
+        } else {
+            int serverResponseCode = realUploadThing(conn, dos, sourceFile, fileName, lineEnd, twoHyphens, boundary, maxBufferSize);
             if (serverResponseCode == 200)
                 dialog.dismiss();
             return serverResponseCode;
@@ -241,7 +249,7 @@ public class MainActivity extends ActionBarActivity {
         } // End else block
     }
 
-    public void whatsappintent(String msg){
+    public void whatsappintent(String msg) {
         Intent sendIntent = new Intent();
         sendIntent.setAction(Intent.ACTION_SEND);
         sendIntent.putExtra(Intent.EXTRA_TEXT, msg);
@@ -250,14 +258,14 @@ public class MainActivity extends ActionBarActivity {
         startActivity(sendIntent);
     }
 
-    public void filechooserPfm(View v){
+    public void filechooserPfm(View v) {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("file/*");
-        startActivityForResult(intent,READ_REQUEST_CODE);
+        startActivityForResult(intent, READ_REQUEST_CODE);
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode,Intent resultData) {
+    public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
 
         // The ACTION_OPEN_DOCUMENT intent was sent with the request code
         // READ_REQUEST_CODE. If the request code seen here doesn't match, it's the
@@ -272,10 +280,10 @@ public class MainActivity extends ActionBarActivity {
             if (resultData != null) {
                 uri = resultData.getData();
                 Log.i(TAG, "Uri: " + uri.toString());
-                Log.i(TAG, "name : "+uri.getLastPathSegment());
+                Log.i(TAG, "name : " + uri.getLastPathSegment());
                 uploadFilePath = getRealPathFromURI(MainActivity.this, uri);
                 uploadFileName = uri.getLastPathSegment();
-                messageText.setText("VERBOSE OUTPUT\nfile path :- "+uploadFilePath+"");
+                messageText.setText("VERBOSE OUTPUT\nfile path :- " + uploadFilePath + "");
             }
         }
     }
@@ -283,8 +291,8 @@ public class MainActivity extends ActionBarActivity {
     public String getRealPathFromURI(Context context, Uri contentUri) {
         Cursor cursor = null;
         try {
-            String[] proj = { MediaStore.Images.Media.DATA };
-            cursor = context.getContentResolver().query(contentUri,  proj, null, null, null);
+            String[] proj = {MediaStore.Images.Media.DATA};
+            cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
             int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
             cursor.moveToFirst();
             return cursor.getString(column_index);
@@ -295,31 +303,4 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            Toast.makeText(MainActivity.this,"SpEcHiDe",Toast.LENGTH_LONG).show();
-            return true;
-        }
-
-        if (id == R.id.auto_update) {
-            Toast.makeText(MainActivity.this,"under development",Toast.LENGTH_LONG).show();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 }
