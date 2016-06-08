@@ -126,11 +126,13 @@ public class MainActivity extends AppCompatActivity {
             if (serverResponseCode == 200) {
                 runOnUiThread(new Runnable() {
                     public void run() {
-                        String msg = "I want to share: " + txt.getText().toString() + ". Please view it by clicking here: " + responseOutput.toString() + "sent using https://play.google.com/store/apps/details?id=org.spechide.btappnder.whatsapptransmitter";
+                        String msg = txt.getText().toString() + "\r\n Please view it by clicking here: " + responseOutput.toString() + " \r\nSent using https://play.google.com/store/apps/details?id=me.shrimadhavuk.watransmitter";
                         //messageText.setText(msg);
                         Toast.makeText(MainActivity.this, "File Upload Complete.",
                                 Toast.LENGTH_SHORT).show();
+                        txt.setText("");
                         whatsappintent(msg);
+
                     }
                 });
             }
@@ -166,15 +168,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public int uploadFile(String sourceFileUri) {
-        String fileName = sourceFileUri;
+    public int uploadFile(String fileName) {
         HttpURLConnection conn = null;
         DataOutputStream dos = null;
         String lineEnd = "\r\n";
         String twoHyphens = "--";
         String boundary = "*****";
         int maxBufferSize = 1 * 1024 * 1024;
-        File sourceFile = new File(sourceFileUri);
+        File sourceFile = new File(fileName);
         if (!sourceFile.isFile()) {
             dialog.dismiss();
             Log.e("uploadFile", "Source File not exist :" + uploadFilePath);
@@ -184,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             return 0;
-        } else if (fileName.endsWith(".jpg") || fileName.endsWith(".avi") || fileName.endsWith(".mp3") || fileName.endsWith(".png") || fileName.endsWith(".mp4")) {
+        } /*else if (fileName.endsWith(".jpg") || fileName.endsWith(".avi") || fileName.endsWith(".mp3") || fileName.endsWith(".png") || fileName.endsWith(".mp4")) {
             dialog.dismiss();
             runOnUiThread(new Runnable() {
                 public void run() {
@@ -192,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             return 0;
-        } else {
+        }*/ else {
             int serverResponseCode = realUploadThing(conn, dos, sourceFile, fileName, lineEnd, twoHyphens, boundary, maxBufferSize);
             if (serverResponseCode == 200)
                 dialog.dismiss();
@@ -250,6 +251,41 @@ public class MainActivity extends AppCompatActivity {
                 cursor.close();
             }
         }
+    }
+
+    /** Called when the activity is about to become visible. */
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.i(TAG, "The onStart() event");
+    }
+
+    /** Called when the activity has become visible. */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i(TAG, "The onResume() event");
+    }
+
+    /** Called when another activity is taking focus. */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i(TAG, "The onPause() event");
+    }
+
+    /** Called when the activity is no longer visible. */
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.i(TAG, "The onStop() event");
+    }
+
+    /** Called just before the activity is destroyed. */
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "The onDestroy() event");
     }
 
 }
