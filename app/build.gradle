@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.2"
 
     defaultConfig {
-        applicationId "me.shrimadhavuk.watransmitter"
+        applicationId "me.shrimadhavuk.awtransmitter"
         minSdkVersion 10
         targetSdkVersion 22
         versionCode 2
