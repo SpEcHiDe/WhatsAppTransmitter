@@ -1,4 +1,4 @@
-package me.shrimadhavuk.watransmitter;
+package me.shrimadhavuk.awtransmitter;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
             if (serverResponseCode == 200) {
                 runOnUiThread(new Runnable() {
                     public void run() {
-                        String msg = txt.getText().toString() + "\r\n Please view it by clicking here: " + responseOutput.toString() + " \r\nSent using https://play.google.com/store/apps/details?id=me.shrimadhavuk.watransmitter";
+                        String msg = txt.getText().toString() + "\r\n Please view it by clicking here: " + responseOutput.toString() + " \r\nSent using https://play.google.com/store/apps/details?id=me.shrimadhavuk.awtransmitter";
                         //messageText.setText(msg);
                         Toast.makeText(MainActivity.this, "File Upload Complete.",
                                 Toast.LENGTH_SHORT).show();

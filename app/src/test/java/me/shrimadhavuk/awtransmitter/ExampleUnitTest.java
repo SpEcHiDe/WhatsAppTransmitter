@@ -1,4 +1,4 @@
-package me.shrimadhavuk.watransmitter;
+package me.shrimadhavuk.awtransmitter;
 
 import org.junit.Test;
 
