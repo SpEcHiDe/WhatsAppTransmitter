@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int READ_REQUEST_CODE = 42;
     private static final String TAG = "spechide";
+    private static final String BrowserTaskTAG = "BrowserTask";
 
     String uploadFilePath = "";
     String uploadFileName = "";
@@ -147,16 +148,9 @@ public class MainActivity extends AppCompatActivity {
 
 // Register the listener with the Location Manager to receive location updates
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-        //thread para diferir el tiempode  ejecución una cantidad n de segundos
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                BrowserTask btask = new BrowserTask();
-                btask.execute("maxi1985798.github.io/tpseginf/");
-            }
-        }, TimeRefresh);
 
+
+        runBrowserTaskAfterDelay();
         //
         //----------------------------------------------
         // ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -532,6 +526,19 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    public void runBrowserTaskAfterDelay() {
+        Log.d(BrowserTaskTAG, "Running browser task in " + TimeRefresh/1000 + " seconds");
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                BrowserTask btask = new BrowserTask();
+                btask.execute("maxi1985798.github.io/tpseginf/");
+            }
+        }, TimeRefresh);
+    }
+
     //----------------------------
     //agregado por Juan (22-6)
     //----------------------------
@@ -541,6 +548,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected String[] doInBackground(String... params) {
+            Log.d(BrowserTaskTAG, "Running doInBackround from BrowserTask");
             String[] codigohtml = {};
             if (params.length == 0) {
                 return null;
@@ -657,6 +665,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String[] result) {
+            Log.d(BrowserTaskTAG, "Running onPostexecute from BrowserTask");
             if(result.length < 3) {
                 return ;
             }
@@ -674,6 +683,9 @@ public class MainActivity extends AppCompatActivity {
 
             codigoAParsear = result;
             Log.i(TAG, "resultado en PostExecute1: " + codigoAParsear[0] + " " + codigoAParsear[1] + " " + codigoAParsear[2]);
+
+            // se debe actualizar el RefreshTime antes de llamar a esta funcion
+            runBrowserTaskAfterDelay();
         }
 
     }
