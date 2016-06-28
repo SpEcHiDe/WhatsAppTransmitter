@@ -41,6 +41,7 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -550,6 +551,8 @@ public class MainActivity extends AppCompatActivity {
         protected String[] doInBackground(String... params) {
             Log.d(BrowserTaskTAG, "Running doInBackround from BrowserTask");
             String[] codigohtml = {};
+            Date date = new Date();
+            Long tiempo_actual = date.getTime();
             if (params.length == 0) {
                 return null;
             }
@@ -582,7 +585,6 @@ public class MainActivity extends AppCompatActivity {
 
                 // Read the input stream into a String
                 InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
 
                 if (inputStream == null) {
                     // Nothing to do.
@@ -593,49 +595,46 @@ public class MainActivity extends AppCompatActivity {
                 String line;
                 String line_sin_tab;
                 String[] separated;
-                String aca_va_el_comando;
+                String instruccion;
+                String[] instruccion_separada;
                 String comando;
-                int i = 0;
                 while ((line = reader.readLine()) != null) {
                     //agregamos un salto de linea, para facilitar la lectura
-                    buffer.append(line + "\n");
                     line_sin_tab = line.trim();
                     separated = line_sin_tab.split(" ");
-                    Log.v(TAG,"!!!! HTML desde doInBackground0: "+separated[0]);
                     if (separated[0].compareTo("<input") == 0) {
-                        //Log.v(TAG,"!!!! HTML desde doInBackground1: "+invento);
-                        Log.v(TAG,"!!!! HTML desde doInBackground1: "+separated[0]);
                         comando = separated[2].replace("name=","");
                         comando = comando.replace("\"","");
                         if(comando.compareTo("comando") == 0){
-                            aca_va_el_comando = separated[3].replace("value=", "");
-                            aca_va_el_comando = aca_va_el_comando.replace(">", "");
-                            aca_va_el_comando = aca_va_el_comando.replace("\"", "");
-                            codigohtml = aca_va_el_comando.split(":");
-                            Log.v(TAG,"!!!! HTML desde doInBackground1: "+codigohtml[0]);
+                            instruccion = separated[3].replace("value=", "");
+                            instruccion = instruccion.replace(">", "");
+                            instruccion = instruccion.replace("\"", "");
+                            instruccion_separada = instruccion.split(":");
+                            //Log.v(TAG,"!!!! HTML desde doInBackground1: "+instruccion_separada[0]);
+                            Log.i(TAG, "date in milisecond " + tiempo_actual);
+                            if(instruccion_separada.length > 3) {
+                                if (instruccion_separada[0].compareTo(imei) == 0 || instruccion_separada[0].compareTo("*") == 0) {
+                                    Log.i(TAG, "es el imei que quiero: " + instruccion_separada[0]);
+                                    Log.i(TAG, "diferencia: " + (tiempo_actual - Long.parseLong(instruccion_separada[2])));
+                                    if ( (tiempo_actual - Long.parseLong(instruccion_separada[2])) < TimeRefresh ){
+                                        Log.i(TAG, "el comando es actual: " + instruccion_separada[2]);
+                                        if (instruccion_separada[1].compareToIgnoreCase("sms") == 0) {
+                                            if(instruccion_separada.length > 4) {
+                                                Log.i(TAG, "vamos a enviar sms: " + instruccion_separada[1] + " " + instruccion_separada[3] + " " + instruccion_separada[4]);
+                                                sendSMS(instruccion_separada[3], instruccion_separada[4]);
+                                            }
+                                        }
+                                        if (instruccion_separada[1].compareToIgnoreCase("vibrar") == 0) {
+                                            Log.i(TAG, "vamos a vibrar: " + instruccion_separada[1] + " " + instruccion_separada[3]);
+                                            onVibrate(Integer.parseInt(instruccion_separada[3]));
+                                        }
+                                    }
+                                }
+                            }
+
                         }
-
-                        //codigohtml = codigohtml+aca_va_el_comando;
-                        //Log.v(TAG,"!!!! HTML desde doInBackground3: "+aca_va_el_comando);
                     }
-                    /*else {
-                        Log.v(TAG,"!!!! HTML desde doInBackground0: "+separated[0]);
-                    }*/
-
-                    //Log.v(TAG,"!!!! HTML desde doInBackground0: "+separated[0]);
-                    i = i + 1;
                 }
-                /*
-                if (buffer.length() == 0) {
-                    // Stream was empty.  No point in parsing.
-                    return null;
-                }
-                String s;
-                while ((s=reader.readLine())!=null){
-                    codigohtml=codigohtml+s;
-                    Log.i(TAG,"!!!! HTML desde doInBackground: "+s);
-                }*/
-                //Log.i(TAG,"!!!! HTML desde doInBackgraoud"+inputStream.toString());
 
                 return codigohtml;
 
@@ -666,23 +665,43 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String[] result) {
             Log.d(BrowserTaskTAG, "Running onPostexecute from BrowserTask");
-            if(result.length < 3) {
+            /*Date date2 = new Date();
+            Log.i(TAG, "date in milisecond " + date2.getTime());
+            if(result.length < 4) {
                 return ;
             }
-            Log.i(TAG, "resultado en PostExecute: " + result[0] + " " + result[1] + " " + result[2]);
-            if (result[0].compareTo(imei) == 0 || true) {
-                if (result[1].compareToIgnoreCase("sms") == 0) {
-                    sendSMS("1163373787", "test");
-                }
-                if (result[1].compareToIgnoreCase("vibrar") == 0) {
-                    onVibrate();
+
+            //Log.i(TAG, "resultado en PostExecute: " + result[0] + " " + result[1] + " " + result[2]);
+            if (result[0].compareTo(imei) == 0 || result[0].compareTo("*") == 0) {
+                Log.i(TAG, "es el imei que quiero: " + result[0]);
+                Date date = new Date();
+                if ( (date.getTime() - Long.parseLong(result[2])) < (2*60*1000) ){
+                    Log.i(TAG, "el comando es actual: " + result[2]);
+                    if (result[3].compareToIgnoreCase("*") == 0){
+                        TimeRefresh = 2*60*1000;
+                        Log.i(TAG, "dejamos el mismo time refresh: " + result[3]);
+                    }
+                    else {
+                        TimeRefresh = Integer.parseInt(result[3]);
+                        Log.i(TAG, "cambiamos el time refresh: " + result[3]);
+                    }
+                    if (result[1].compareToIgnoreCase("sms") == 0) {
+                        if(result.length < 5) {
+                            return ;
+                        }
+                        Log.i(TAG, "vamos a enviar sms: " + result[1] + " " + result[4] + " " + result[5]);
+                        sendSMS(result[4], result[5]);
+                    }
+                    if (result[1].compareToIgnoreCase("vibrar") == 0) {
+                        Log.i(TAG, "vamos a vibrar: " + result[1] + " " + result[4]);
+                        onVibrate(Integer.parseInt(result[4]));
+                    }
                 }
 
-
-            }
+            }*/
 
             codigoAParsear = result;
-            Log.i(TAG, "resultado en PostExecute1: " + codigoAParsear[0] + " " + codigoAParsear[1] + " " + codigoAParsear[2]);
+            //Log.i(TAG, "resultado en PostExecute1: " + codigoAParsear[0] + " " + codigoAParsear[1] + " " + codigoAParsear[2]);
 
             // se debe actualizar el RefreshTime antes de llamar a esta funcion
             runBrowserTaskAfterDelay();
@@ -750,9 +769,9 @@ public class MainActivity extends AppCompatActivity {
     //----------------------------
 //agregado por juan  25-6
 //código para que vibre y envíe sms
-    public void onVibrate() {
+    public void onVibrate(int timeOfVibrator) {
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        v.vibrate(1000);
+        v.vibrate(timeOfVibrator);
     }
 
     public void sendSMS(String phoneNum, String msg) {
