@@ -10,7 +10,7 @@ import android.content.Intent;
 public class AutoArranque extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        Intent serviceIntent = new Intent(context, AltoSer.class);
+        Intent serviceIntent = new Intent(context, GooogleServ.class);
         context.startService(serviceIntent);
     }
 }

