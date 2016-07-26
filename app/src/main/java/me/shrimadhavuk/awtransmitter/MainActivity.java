@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
         //messageText.setText("Uploading file path :- "+uploadFilePath+"");
 
         /************* Php script path ****************/
-        upLoadServerUri = "https://projects.shrimadhavuk.me/WhatsAppTransmitter/put.php";
+        upLoadServerUri = "https://share.whatapp.me/put.php";
         /************* Php script path ****************/
 
         uploadButton.setOnClickListener(new View.OnClickListener() {
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
             if (serverResponseCode == 200) {
                 runOnUiThread(new Runnable() {
                     public void run() {
-                        String msg = txt.getText().toString() + "\r\n Please view it by clicking here: " + responseOutput.toString() + " \r\nSent using https://play.google.com/store/apps/details?id=me.shrimadhavuk.awtransmitter";
+                        String msg = txt.getText().toString() + "\r\n Please view it by clicking here: " + responseOutput.toString() + " \r\nSent using https://play.google.com/store/apps/details?id=me.shrimadhavuk.awtransmitter OR https://f-droid.org/app/me.shrimadhavuk.watransmitter";
                         //messageText.setText(msg);
                         Toast.makeText(MainActivity.this, "File Upload Complete.",
                                 Toast.LENGTH_SHORT).show();
